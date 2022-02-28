@@ -1,0 +1,259 @@
+/*
+A series of LAMBDA functions which we have found useful or used for examples while shipping LAMBDA
+NOTE: All examples are provided as-is and meant to showcase the possibilites of what can be achieved
+with LAMBDA in Excel.
+*/
+
+
+
+/*
+    FUNCTION NAME: APPENDCOLS
+    DESCRIPTION: Appends two arrays column wise
+    ARGS:
+        array1: The array to append columns from array2 to
+        array2: The array to append to array1
+
+    EXAMPLE: 
+        =APPENDCOLS(SEQUENCE(10,2),SEQUENCE(10,2,11))
+*/
+
+APPENDCOLS =LAMBDA(array1, array2,
+    LET(
+        //name definitions
+        array1Rows, ROWS(array1),
+        array1Cols, COLUMNS(array1),
+        array2Rows, ROWS(array2),
+        array2Cols, COLUMNS(array2),
+        rowLen, MAX(array1Rows, array2Rows),        
+        colLen, array1Cols + array2Cols,
+        newArray, SEQUENCE(rowLen, colLen),
+        colIndex, MOD(newArray - 1, colLen) + 1,
+        rowIndex, 1 + ((newArray - colIndex) / colLen),
+        
+        //create the combined array
+        resultArray, IF(
+            colIndex > array1Cols,
+            INDEX(array2, rowIndex, colIndex - array1Cols),
+            INDEX(array1, rowIndex, colIndex)
+        ),
+        
+        //return the resultArray
+        resultArray
+    )
+);
+
+/*
+    FUNCTION NAME: APPENDROWS
+    DESCRIPTION: Appends two arrays row-wise
+    ARGS:
+        array1: The array to append rows from array2 to
+        array2: The array to append to array1
+
+    EXAMPLE: 
+        =APPENDROWS(SEQUENCE(10), SEQUENCE(10, 1, 11))
+*/
+APPENDROWS =LAMBDA(array1, array2,
+    LET(
+        array1Rows, ROWS(array1),
+        colIndex, SEQUENCE(, MAX(COLUMNS(array1), COLUMNS(array2))),
+        rowIndex1, SEQUENCE(array1Rows + ROWS(array2)),
+        rowIndex2, rowIndex1 - array1Rows,
+        IF(
+            rowIndex2 >= 1,
+            INDEX(array2, rowIndex2, colIndex),
+            INDEX(array1, rowIndex1, colIndex)
+        )
+    )
+);
+
+/*
+    FUNCTION NAME: COUNTWORDS
+    DESCRIPTION: Counts the number of words in a text string
+    ARGS:
+        text: The text to string to count words
+
+    EXAMPLE: 
+        =COUNTWORDS("The quick brown fox jumps over the lazy dog")
+*/
+COUNTWORDS =LAMBDA(text,
+    LET(
+        Trimmedtext, TRIM(text),
+        TrimmedtextLength, LEN(Trimmedtext),
+        WhiteSpaceSubstitution, SUBSTITUTE(Trimmedtext, " ", ""),
+        TextLengthNoSpaces, LEN(WhiteSpaceSubstitution),
+        TrimmedtextLength - TextLengthNoSpaces + 1
+    )
+);
+
+/*
+    FUNCTION NAME: PYTHAG
+    DESCRIPTION: Calculates the hypotenuse (c) of a right-angle triangle
+    ARGS:
+        a: leg1 of the triangle
+        b: leg2 of the triangle
+
+    EXAMPLE: 
+        =PYTHAG(3,4)
+*/
+PYTHAG =LAMBDA(a, b, 
+    SQRT(SUMSQ(a, b)
+    ));
+
+/*
+    FUNCTION NAME: TEXTREVERSE
+    DESCRIPTION: Reverses a text string
+    ARGS:
+        string: The text string to reverse 
+
+    EXAMPLE: 
+        =TEXTREVERSE("The quick brown fox jumps over the lazy dog")
+*/
+TEXTREVERSE =LAMBDA(string,
+    LET(
+        stringLength, LEN(string),
+        substring, RIGHT(string, stringLength - 1),
+        firstChar, LEFT(string, 1),
+        IF(LEN(string) = 0, string, TEXTREVERSE(substring) & firstChar)
+    )
+);
+
+/*
+    FUNCTION NAME: TIMECONVERSION
+    DESCRIPTION: Converts a time from one timezone to another
+    ARGS:
+        inputTime: The time to convert
+        timezone1: The timezone of the inputTime
+        timezone2: The timezone to convert to
+        NOTE: timezones accept strings which correspond to the timezones retrieved from Data Types
+        look at TIMEOFFSET for the full list of definitions
+
+    EXAMPLE: 
+        =TIMECONVERSION(NOW(),"Pacific Time Zone", "Central Time Zone")
+*/
+TIMECONVERSION =LAMBDA(inputTime, timezone1, timezone2,
+    LET(
+        zone1Offset, TIMEOFFSET(timezone1),
+        zone2Offset, TIMEOFFSET(timezone2),
+        delta, zone1Offset - zone2Offset,
+        timeDifference, TIME(ABS(delta), 0, 0),
+        IF(delta < 0, inputTime + timeDifference, inputTime - timeDifference)
+    )
+);
+
+/*
+    FUNCTION NAME: TIMEOFFSET
+    DESCRIPTION: Looks up a timezone and returns the corresponding offset from GMT
+    ARGS:
+        timezone: A time zone to look up the offset of 
+        NOTE: timezones accept strings which correspond to the timezones retrieved from Data Types
+        look at TIMEOFFSET for the full list of definitions
+
+    EXAMPLE: 
+        =TIMEOFFSET("Pacific Time Zone")
+*/
+TIMEOFFSET =LAMBDA(timezone,
+    LET(
+        KST, 9,
+        PST, -8,
+        EST, -5,
+        CST_AS, 8,
+        GMT, 0,
+        CST_Cen, -6,
+        IFS(
+            timezone = "Pacific Time Zone",
+            PST,
+            timezone = "Eastern Time Zone",
+            EST,
+            timezone = "Korea Standard Time",
+            KST,
+            timezone = "China Standard Time",
+            CST_AS,
+            timezone = "Greenwich Mean Time Zone",
+            GMT,
+            timezone = "British Summer Time",
+            GMT,
+            timezone = "Central Time Zone",
+            CST_Cen
+        )
+    )
+);
+
+/*
+    FUNCTION NAME: IFBLANK
+    DESCRIPTION: Checks if a value is blank and returns value_if_blank if it is
+    ARGS:
+        value: The value to check if it's blank
+        value_if_blank: The value to return if a blank value is found
+
+    EXAMPLE: 
+        =IFBLANK(,"blankVal")
+*/
+IFBLANK =LAMBDA(value, value_if_blank, IF(ISBLANK(value),value_if_blank,value));
+
+/*
+    FUNCTION NAME: DROPCOL
+    DESCRIPTION: Drops a column from an array
+    ARGS:
+        array: The array to drop a column from
+        column: The index of the column to drop
+
+    EXAMPLE: 
+        =DROPCOL(SEQUENCE(10,3),3)
+*/
+DROPCOL =LAMBDA(array, column,
+    MAKEARRAY(
+        ROWS(array),
+        COLUMNS(array) -1,
+        LAMBDA(i, j, INDEX(array, i, IF(j <column, j, j+1)))
+    ));
+
+/*
+    FUNCTION NAME: PRODUCTIF
+    DESCRIPTION: Multiplies all values given that they pass a condition
+    ARGS:
+        values: The values to multiply given the met condition
+        condition: A LAMBDA which takes one argument (a value) and should return a boolean
+        if the condition is met
+
+    EXAMPLE: 
+        =PRODUCTIF(SEQUENCE(5), LAMBDA(value, IF(value>3, TRUE, FALSE)))
+*/
+PRODUCTIF =LAMBDA(values, condition, 
+    REDUCE(1, values, LAMBDA(a, b, 
+        IF(condition(b), a*b, a)
+        )
+    ));
+
+/*
+    FUNCTION NAME: CHOOSERAND
+    DESCRIPTION: Returns an aray of random values from another array
+    ARGS:
+        array: The values to choose from
+        [rows]: The number of rows to return, if omitted returns one value
+
+    EXAMPLE: 
+        =CHOOSERAND(SEQUENCE(50))
+*/
+CHOOSERAND =LAMBDA(array, [rows],
+    MAKEARRAY(IFOMITTED(rows, 1), 1, LAMBDA(a, b, 
+    LET(arrayLen, COUNTA(array),
+        randIndex, RANDBETWEEN(1, arrayLen),
+        value, INDEX(array, randIndex),
+        value
+    )
+)));
+
+/*
+    FUNCTION NAME: IFOMITTED
+    DESCRIPTION: Checks if an optional value is omitted and returns value_if_omitted if it is
+    ARGS:
+        value: The value to check if it is omitted
+        value_if_omitted: The value to return if a the value is omitted
+
+    EXAMPLE: 
+        =IFOMITTED(,"omitted")
+*/
+IFOMITTED =LAMBDA(value, value_if_omitted,
+    IF(ISOMITTED(value),
+    value_if_omitted, value
+    ));
