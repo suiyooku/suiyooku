@@ -1,0 +1,15 @@
+(location) => 
+let
+    Source = Json.Document(Web.Contents(
+        "https://maps.googleapis.com/maps/api/geocode/json?address="&
+        location&
+        //1600+Amphitheatre+Parkway,+Mountain+View,+CA&
+        "&key=AIzaSyApuGahJSiRxSgBzB8ZmdKEH6eCZw53AJM")),
+    #"Converted to Table" = Table.FromRecords({Source}),
+    #"Expanded results" = Table.ExpandListColumn(#"Converted to Table", "results"),
+    #"Expanded results1" = Table.ExpandRecordColumn(#"Expanded results", "results", {"formatted_address", "geometry"}, {"formatted_address", "geometry"}),
+    #"Expanded geometry" = Table.ExpandRecordColumn(#"Expanded results1", "geometry", {"location"}, {"location"}),
+    #"Expanded location" = Table.ExpandRecordColumn(#"Expanded geometry", "location", {"lat", "lng"}, {"lat", "lng"}),
+    #"Removed Columns" = Table.RemoveColumns(#"Expanded location",{"status"})
+in
+    #"Removed Columns"
