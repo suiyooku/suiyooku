@@ -4,7 +4,7 @@ let
         "https://maps.googleapis.com/maps/api/geocode/json?address="&
         location&
         //1600+Amphitheatre+Parkway,+Mountain+View,+CA&
-        "&key=AIzaSyApuGahJSiRxSgBzB8ZmdKEH6eCZw53AJM")),
+        "&key=GOOGLE_API_KEY")),
     #"Converted to Table" = Table.FromRecords({Source}),
     #"Expanded results" = Table.ExpandListColumn(#"Converted to Table", "results"),
     #"Expanded results1" = Table.ExpandRecordColumn(#"Expanded results", "results", {"formatted_address", "geometry"}, {"formatted_address", "geometry"}),
